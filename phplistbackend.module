@@ -174,20 +174,20 @@ function phplistbackend_get_messages($status='all') {
     }
     // add the lists for each message
     foreach ($messages as $id => $message) {
-		  // building query
-			// get the name and id of the lists that belong to this message
+      // building query
+      // get the name and id of the lists that belong to this message
       $query = "SELECT list.name, list.id FROM {%s} as list, {%s} as lmsg WHERE lmsg.messageid = %d AND list.id = lmsg.listid";
       $placeholder = array();
-			// populate placeholder with list table name
+      // populate placeholder with list table name
       $placeholder[] = $prefix['prefix'].'list';
-			// populate placeholder with listmessage table name
+      // populate placeholder with listmessage table name
       $placeholder[] = $prefix['prefix'].'listmessage';
-			// populate placeholder with message id
+      // populate placeholder with message id
       $placeholder[] = $message['id'];
-			// execute query
+      // execute query
       $results = db_query($query, $placeholder);
       while ($result = db_fetch_array($results)) {
-			  // populate the message lists array with the results
+        // populate the message lists array with the results
         $messages[$id]['lists'][$result['id']] = $result['name'];
       }
     }
@@ -207,106 +207,106 @@ function phplistbackend_message_save($message) {
   if ($prefix == FALSE) {
     return FALSE;
   }
-	// Set active db to phplist db
-	db_set_active('phplist');
+  // Set active db to phplist db
+  db_set_active('phplist');
   // Looking into a way to abuse schema api to do this for us
   // Check if the id was set
   if (!isset($message['id'])) {
-	  // No ID was given, this message is new
-  	// assuming a lot here, should be a better way to handle this
+    // No ID was given, this message is new
+    // assuming a lot here, should be a better way to handle this
     $query = "INSERT INTO {%s} (subject, fromfield, message, textmessage, footer, entered, embargo, repeatuntil, status, userselection, htmlformatted, sendformat, template, sendstart, rsstemplate, owner) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s', %d, '%s', '%s', %d)";
     $placeholder = array();
     $placeholder[] = $prefix['prefix'] . 'message';
-  	$placeholder[] = $message['subject'];
-  	$placeholder[] = $message['fromfield'];
-  	$placeholder[] = $message['message'];
-		$placeholder[] = $message['textmessage'];
-  	$placeholder[] = $message['footer'];
-		$placeholder[] = date('Y-m-d H:i:s');
-		$placeholder[] = date('Y-m-d H:i:s');
-		$placeholder[] = date('Y-m-d H:i:s');
-  	$placeholder[] = $message['status'];
-  	$placeholder[] = $message['userselection'];
-  	$placeholder[] = $message['htmlformatted'];
-  	$placeholder[] = $message['sendformat'];
-  	$placeholder[] = $message['template'];
-  	$placeholder[] = $message['sendstart'];
-		$placeholder[] = '';
-  	$placeholder[] = $message['owner'];
-		// Execute insert-query
-		$result = db_query($query, $placeholder);
+    $placeholder[] = $message['subject'];
+    $placeholder[] = $message['fromfield'];
+    $placeholder[] = $message['message'];
+    $placeholder[] = $message['textmessage'];
+    $placeholder[] = $message['footer'];
+    $placeholder[] = date('Y-m-d H:i:s');
+    $placeholder[] = date('Y-m-d H:i:s');
+    $placeholder[] = date('Y-m-d H:i:s');
+    $placeholder[] = $message['status'];
+    $placeholder[] = $message['userselection'];
+    $placeholder[] = $message['htmlformatted'];
+    $placeholder[] = $message['sendformat'];
+    $placeholder[] = $message['template'];
+    $placeholder[] = $message['sendstart'];
+    $placeholder[] = '';
+    $placeholder[] = $message['owner'];
+    // Execute insert-query
+    $result = db_query($query, $placeholder);
     // Get the id of the message we just inserted
-		$msgid = db_last_insert_id($prefix['prefix'] . 'message', 'id');
-		// Check if it was successful and if there are any lists to add
-		if ($result && count($message['lists'])) {
-			// build query for insert
-			$query = "INSERT INTO {%s} (messageid, listid, entered) VALUES ";
-			// build placeholder array
-			$placeholder = array();
-			$placeholder[] = $prefix['prefix'] . 'listmessage';
-			// add values for each list
-			$queryextend = array();
-			foreach ($message['lists'] as $list) {
-			  // add 3 placeholder and 3 values for each list
-			  $queryextend[] = "(%d, %d, '%s')";
-				$placeholder[] = $msgid;
-				$placeholder[] = $list;
-				$placeholder[] = date('Y-m-d H:i:s');
-			}
-			// add the extra placeholders to the main query, split by a comma and a space
-			$query .= implode(', ', $queryextend);
-			// run query
-			$result = db_query($query, $placeholder);
-		}
-	}
-	else {
-	  // ID was given, using update instead
+    $msgid = db_last_insert_id($prefix['prefix'] . 'message', 'id');
+    // Check if it was successful and if there are any lists to add
+    if ($result && count($message['lists'])) {
+      // build query for insert
+      $query = "INSERT INTO {%s} (messageid, listid, entered) VALUES ";
+      // build placeholder array
+      $placeholder = array();
+      $placeholder[] = $prefix['prefix'] . 'listmessage';
+      // add values for each list
+      $queryextend = array();
+      foreach ($message['lists'] as $list) {
+        // add 3 placeholder and 3 values for each list
+        $queryextend[] = "(%d, %d, '%s')";
+        $placeholder[] = $msgid;
+        $placeholder[] = $list;
+        $placeholder[] = date('Y-m-d H:i:s');
+      }
+      // add the extra placeholders to the main query, split by a comma and a space
+      $query .= implode(', ', $queryextend);
+      // run query
+      $result = db_query($query, $placeholder);
+    }
+  }
+  else {
+    // ID was given, using update instead
     $query = "UPDATE {%s} SET subject = '%s', fromfield = '%s', message = '%s', textmessage = '%s', footer = '%s', entered = '%s', embargo = '%s', repeatuntil = '%s', status = '%s', userselection = '%s', htmlformatted = %d, sendformat = '%s', template = %d, sendstart = '%s', rsstemplate = '%s', owner = %d WHERE id = %d";
     $placeholder = array();
     $placeholder[] = $prefix['prefix'] . 'message';
-  	$placeholder[] = $message['subject'];
-  	$placeholder[] = $message['fromfield'];
-  	$placeholder[] = $message['message'];
-		$placeholder[] = $message['textmessage'];
-  	$placeholder[] = $message['footer'];
-		$placeholder[] = date('Y-m-d H:i:s');
-		$placeholder[] = date('Y-m-d H:i:s');
-		$placeholder[] = date('Y-m-d H:i:s');
-  	$placeholder[] = $message['status'];
-  	$placeholder[] = $message['userselection'];
-  	$placeholder[] = $message['htmlformatted'];
-  	$placeholder[] = $message['sendformat'];
-  	$placeholder[] = $message['template'];
-  	$placeholder[] = $message['sendstart'];
-		$placeholder[] = '';
-  	$placeholder[] = $message['owner'];
+    $placeholder[] = $message['subject'];
+    $placeholder[] = $message['fromfield'];
+    $placeholder[] = $message['message'];
+    $placeholder[] = $message['textmessage'];
+    $placeholder[] = $message['footer'];
+    $placeholder[] = date('Y-m-d H:i:s');
+    $placeholder[] = date('Y-m-d H:i:s');
+    $placeholder[] = date('Y-m-d H:i:s');
+    $placeholder[] = $message['status'];
+    $placeholder[] = $message['userselection'];
+    $placeholder[] = $message['htmlformatted'];
+    $placeholder[] = $message['sendformat'];
+    $placeholder[] = $message['template'];
+    $placeholder[] = $message['sendstart'];
+    $placeholder[] = '';
+    $placeholder[] = $message['owner'];
     $placeholder[] = $message['id'];
     $result = db_query($query, $placeholder);
     $msgid = $message['id'];
-		if ($result && count($message['lists'])) {
+    if ($result && count($message['lists'])) {
       db_query("DELETE FROM {%s} WHERE messageid = %d", array($prefix['prefix'] . 'listmessage', $message['id']));
-			// build query for insert
-			$query = "INSERT INTO {%s} (messageid, listid, entered) VALUES ";
-			// build placeholder array
-			$placeholder = array();
-			$placeholder[] = $prefix['prefix'] . 'listmessage';
-			// add values for each list
-			$queryextend = array();
-			foreach ($message['lists'] as $list) {
-			  // add 3 placeholder and 3 values for each list
-			  $queryextend[] = "(%d, %d, '%s')";
-				$placeholder[] = $msgid;
-				$placeholder[] = $list;
-				$placeholder[] = date('Y-m-d H:i:s');
-			}
-			// add the extra placeholders to the main query, split by a comma and a space
-			$query .= implode(', ', $queryextend);
-			// run query
-			$result = db_query($query, $placeholder);
-		}
-	}
-	// set active db back to default
-	db_set_active('default');
+      // build query for insert
+      $query = "INSERT INTO {%s} (messageid, listid, entered) VALUES ";
+      // build placeholder array
+      $placeholder = array();
+      $placeholder[] = $prefix['prefix'] . 'listmessage';
+      // add values for each list
+      $queryextend = array();
+      foreach ($message['lists'] as $list) {
+        // add 3 placeholder and 3 values for each list
+        $queryextend[] = "(%d, %d, '%s')";
+        $placeholder[] = $msgid;
+        $placeholder[] = $list;
+        $placeholder[] = date('Y-m-d H:i:s');
+      }
+      // add the extra placeholders to the main query, split by a comma and a space
+      $query .= implode(', ', $queryextend);
+      // run query
+      $result = db_query($query, $placeholder);
+    }
+  }
+  // set active db back to default
+  db_set_active('default');
   if ($msgid) {
     return $msgid;
   }
@@ -317,29 +317,29 @@ function phplistbackend_message_save($message) {
  */
 function phplistbackend_message_load($msg = NULL) {
   if ($msg && is_numeric($msg)) {
-	  // Grab the phplist prefix array
+    // Grab the phplist prefix array
     $prefix = _phplist_dbconn();
     // Prefix will return false if the phplist settings were wrong
     if ($prefix == FALSE) {
       return FALSE;
     }
-  	// Set active db to phplist db
-  	db_set_active('phplist');
-	  $query = "SELECT * FROM {%s} WHERE id = (%d)";
-		$placeholder = array();
-		$placeholder[] = $prefix['prefix'] . 'message';
-		$placeholder[] = $msg;
-		$result = db_query($query, $placeholder);
-		$message = db_fetch_array($result);
+    // Set active db to phplist db
+    db_set_active('phplist');
+    $query = "SELECT * FROM {%s} WHERE id = (%d)";
+    $placeholder = array();
+    $placeholder[] = $prefix['prefix'] . 'message';
+    $placeholder[] = $msg;
+    $result = db_query($query, $placeholder);
+    $message = db_fetch_array($result);
     $result = db_query("SELECT listid FROM {%s} WHERE messageid = (%d)", array($prefix['prefix'] . 'listmessage', $msg));
     $lists = array();
     while ($list = db_result($result)) {
       $lists[] = $list;
     }
     $message['lists'] = $lists;
-		db_set_active('default');
+    db_set_active('default');
     return $message;
-	}
+  }
   return FALSE;
 }
 
