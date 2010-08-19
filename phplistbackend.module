@@ -80,11 +80,25 @@ function phplistbackend_nodeapi(&$node, $op, $teaser, $page) {
     case 'insert':
       if (variable_get('phplistbackend_newsletter_'. $node->type, 0)) {
         $author = user_load($node->uid);
+        // Get translated path as absolute url,
+        // even if there is no translation.
+        if (function_exists('translation_path_get_translations') && function_exists('language_list')) {
+          $paths = translation_path_get_translations('node/'.$node->nid);
+          $path = empty($paths) ? 'node/'.$node->nid : $paths[$node->language];
+          $langs = language_list();
+          $url = url($path, array('language' => $langs[$node->language]));
+          if (empty($langs[$node->language]->domain)) {
+            $url = 'http://' . $_SERVER['HTTP_HOST'] . $url;
+          }
+        }
+        else {
+          $url = 'http://' . $_SERVER['HTTP_HOST'] . url('node/'.$node->nid);
+        }
         $message = array(
           'subject' => $node->title,
           'fromfield' => variable_get('site_name', 'Drupal') . ' ' . variable_get('site_email', 'info@example.com'),
-          'message' => '[URL:'. url('node/' . $node->nid) . ']',
-          'textmessage' => url('node/' . $node->nid),
+          'message' => '[URL:'. $url . ']',
+          'textmessage' => $url,
           'footer' => '',
           'status' => $node->phplistbackend_status,
           'userselection' => $node->language != '' ? phplistbackend_format_userselection($node->language) : NULL,
@@ -107,6 +121,22 @@ function phplistbackend_nodeapi(&$node, $op, $teaser, $page) {
         $nlid = db_result(db_query('SELECT nlid FROM {phplist_node} WHERE nid = %d', $node->nid));
         $message = phplistbackend_message_load($nlid);
         $author = user_load($node->uid);
+        // Get translated path as absolute url,
+        // even if there is no translation.
+        if (function_exists('translation_path_get_translations') && function_exists('language_list')) {
+          $paths = translation_path_get_translations('node/'.$node->nid);
+          $path = empty($paths) ? 'node/'.$node->nid : $paths[$node->language];
+          $langs = language_list();
+          $url = url($path, array('language' => $langs[$node->language]));
+          if (empty($langs[$node->language]->domain)) {
+            $url = 'http://' . $_SERVER['HTTP_HOST'] . $url;
+          }
+        }
+        else {
+          $url = 'http://' . $_SERVER['HTTP_HOST'] . url('node/'.$node->nid);
+        }
+        $message['message'] = '[URL:'.$url.']';
+        $message['textmessage'] = $url;
         $message['subject'] = $node->title;
         $message['status'] = $node->phplistbackend_status;
         $message['owner'] = $author->name;
@@ -400,4 +430,24 @@ function phplistbackend_format_userselection($lang = NULL) {
     return 'select table1.userid from ' . $prefix['user'] . 'user_attribute as table1 where table1.attributeid = ' . $attrid . ' and table1.value = ' . $attrvalue;
   }
   return FALSE;
+}
+
+/**
+ * Implements preprocess_page().
+ */
+function phplistbackend_preprocess_page(&$vars) {
+  // If it is phplist fetching this page, add a phplist-page.tpl.php suggestion
+  if (strpos($_SERVER['HTTP_USER_AGENT'], 'phplist') !== FALSE) {
+    $vars['template_files'][] = 'phplist-page';
+  }
+}
+
+/**
+ * Implements preprocess_node().
+ */
+function phplistbackend_preprocess_node(&$vars) {
+  // If it is phplist fetching this page, add a phplist-node.tpl.php suggestion
+  if (strpos($_SERVER['HTTP_USER_AGENT'], 'phplist') !== FALSE) {
+    $vars['template_files'][] = 'phplist-node';
+  }
 }
