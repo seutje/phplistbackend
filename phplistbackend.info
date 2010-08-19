@@ -1,0 +1,7 @@
+; $Id$
+name = phpList backend
+description = Provides a backend tie-in with phpList.
+package = phpList
+dependencies[] = phplist
+core = 6.x
+
