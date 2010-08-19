@@ -16,7 +16,6 @@ function phplistbackend_form_alter(&$form, $form_state, $form_id) {
   }
   elseif (isset($form['type']) && isset($form['#node']) && $form['type']['#value'] .'_node_form' == $form_id) {
     $node = $form['#node'];
-    dsm($node);
     if (variable_get('phplistbackend_newsletter_'. $form['type']['#value'], 0)) {
       $form['phplistbackend'] = array(
         '#type' => 'fieldset',
@@ -57,7 +56,6 @@ function phplistbackend_form_alter(&$form, $form_state, $form_id) {
         '#options' => $lists,
         '#description' => t('Lists to send this newsletter to.')
       );
-      dsm($form);
     }
   }
 }
@@ -72,7 +70,6 @@ function phplistbackend_nodeapi(&$node, $op, $teaser, $page) {
     case 'load':
       $nlid = db_result(db_query('SELECT nlid FROM {phplist_node} WHERE nid = %d', $node->nid));
       $message = phplistbackend_message_load($nlid);
-      dsm($message);
       return array(
         'phplistbackend_nlid' => $nlid,
         'phplistbackend_status' => $message['status'],
@@ -204,7 +201,6 @@ function phplistbackend_get_messages($status='all') {
  * Saves a message to the db, if an ID is supplied, it will update the messag with that ID
  */
 function phplistbackend_message_save($message) {
-  dsm($message);
   // Grab the phplist prefix array
   $prefix = _phplist_dbconn();
   // Prefix will return false if the phplist settings were wrong
@@ -287,7 +283,6 @@ function phplistbackend_message_save($message) {
     $placeholder[] = $message['id'];
     $result = db_query($query, $placeholder);
     $msgid = $message['id'];
-    dsm(count($message['lists']));
 		if ($result && count($message['lists'])) {
       db_query("DELETE FROM {%s} WHERE messageid = %d", array($prefix['prefix'] . 'listmessage', $message['id']));
 			// build query for insert
