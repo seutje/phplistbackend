@@ -436,9 +436,11 @@ function phplistbackend_format_userselection($lang = NULL) {
  * Implements preprocess_page().
  */
 function phplistbackend_preprocess_page(&$vars) {
-  // If it is phplist fetching this page, add a phplist-page.tpl.php suggestion
   if (strpos($_SERVER['HTTP_USER_AGENT'], 'phplist') !== FALSE) {
-    $vars['template_files'][] = 'phplist-page';
+    $vars['phplist'] = TRUE;
+  }
+  else {
+    $vars['phplist'] = FALSE;
   }
 }
 
@@ -446,8 +448,10 @@ function phplistbackend_preprocess_page(&$vars) {
  * Implements preprocess_node().
  */
 function phplistbackend_preprocess_node(&$vars) {
-  // If it is phplist fetching this page, add a phplist-node.tpl.php suggestion
   if (strpos($_SERVER['HTTP_USER_AGENT'], 'phplist') !== FALSE) {
-    $vars['template_files'][] = 'phplist-node';
+    $vars['phplist'] = TRUE;
+  }
+  else {
+    $vars['phplist'] = FALSE;
   }
 }
